@@ -117,6 +117,15 @@ AS_IF([test "x$with_foma" != xno], [AC_DEFINE([HAVE_FOMA], [1],
                                               [Define to compile foma support in HFST])])
 AM_CONDITIONAL([WANT_FOMA], [test x$with_foma != xno])
 
+AC_ARG_WITH([foma-upstream],
+            [AS_HELP_STRING([--with-foma-upstream],
+                            [Use upstream Foma @<:@default=no@:>@])],
+            [],
+            [with_foma_upstream=no])
+AS_IF([test "x$with_foma_upstream" != xno], [AC_DEFINE([HAVE_FOMA_UPSTREAM], [1],
+                                              [Use upstream Foma])])
+AM_CONDITIONAL([WANT_FOMA_UPSTREAM], [test x$with_foma_upstream != xno])
+
 AC_ARG_WITH([xfsm],
             [AS_HELP_STRING([--with-xfsm],
                             [process unweighted fsts with xfsm @<:@default=no@:>@])],
