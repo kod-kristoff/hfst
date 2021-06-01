@@ -720,14 +720,8 @@ AC_CHECK_HEADERS([limits.h stdlib.h string.h error.h glob.h locale.h langinfo.h]
 
 AC_LANG_PUSH([C++])
 
-# Always use c++11 (flag 'c++0x' is understood also by older compilers) unless --with-c++11=no or --without-c++11 is requested
-# Checks for highest supported C++ standard
-# But, clang++ does not accept invalid OpenFST code, so limit to C++11 for now
-AS_IF([test "x$with_cplusplus_11" != "xno"],[
-AX_CHECK_COMPILE_FLAG([-std=c++11], [CXXFLAGS="$CXXFLAGS -std=c++11"], [
- AS_IF([echo "$CXXFLAGS" | grep '\-std' | grep -E '((gnu\+\+)|(c\+\+))((11)|(0x)|(14)|(1y)|(17)|(1z))' > /dev/null 2> /dev/null], [], [CXXFLAGS="$CXXFLAGS -std=c++0x"])
-])
-])
+# If we're using upstream OpenFST then use C++17, otherwise limit to C++11
+AM_COND_IF([WANT_OPENFST_UPSTREAM], [CXXFLAGS="$CXXFLAGS -std=c++17"], [CXXFLAGS="$CXXFLAGS -std=c++11"])
 
 AC_CHECK_HEADERS([unordered_map], [], [],
 [#ifdef HAVE_UNORDERED_MAP
