@@ -437,8 +437,8 @@ HfstOutputStream::append_implementation_specific_header_data(std::vector<char>&,
 
       char first_byte = *((char*)(&header_length));
       char second_byte = *((char*)(&header_length)+1);
-      write(first_byte);
       write(second_byte);
+      write(first_byte);
       write('\0');
 
       // write the rest of the header
