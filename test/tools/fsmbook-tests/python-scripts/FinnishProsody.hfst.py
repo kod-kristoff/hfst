@@ -6,13 +6,12 @@ verbose_regex=False
 
 def regex(name, expression):
     tr = comp.compile(expression)
-    if name == None:
+    if name is None:
         return tr
-    else:
-        comp.define_transducer(name, tr)
-        if verbose_regex:
-            print("defined transducer '" + expression + "':")
-            print(tr)
+    comp.define_transducer(name, tr)
+    if verbose_regex:
+        print("defined transducer '" + expression + "':")
+        print(tr)
 
 # The data
 FinnWords = hfst.fst(("kalastelet",

@@ -13,13 +13,12 @@ T.push_weights(libhfst.TO_FINAL_STATE)
 tc = libhfst.HfstBasicTransducer(T)
 try:
     # Rounding might affect the precision.
-    if (0.79 < tc.get_final_weight(1)) and (tc.get_final_weight(1) < 0.81):
+    if tc.get_final_weight(1) > 0.79 and tc.get_final_weight(1) < 0.81:
         print("TEST PASSED")
         exit(0)
     else:
         print("TEST FAILED")
         exit(1)
-# If the state does not exist or is not final */
 except libhfst.HfstException:
     print("TEST FAILED: An exception thrown.")
     exit(1)

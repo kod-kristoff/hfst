@@ -10,20 +10,21 @@ infilename=None
 
 options = hfst_commandline.hfst_getopt(short_getopts, long_getopts, 1)
 for opt in options[0]:
-    if opt[0] == '-r' or opt[0] == '--random':
+    if opt[0] in ['-r', '--random']:
         pass #nrandom = int(opt[1]) todo: fix the tests...
-    elif opt[0] == '-X' or opt[0] == '--xfst':
-        if opt[1] == 'obey-flags':
-            obeyflags=True
-            xfst=None
-        else:
+    elif opt[0] in ['-X', '--xfst']:
+        if opt[1] != 'obey-flags':
             raise RuntimeError('error: hfst-fst2strings.py: option --xfst supports only variable obey-flags')
-    else:
-        pass
+        obeyflags=True
+        xfst=None
 istr = hfst_commandline.get_one_hfst_input_stream(options)[0]
 
 for tr in istr:
-    weighted = tr.get_type() != hfst.ImplementationType.SFST_TYPE and tr.get_type() != hfst.ImplementationType.FOMA_TYPE
+    weighted = tr.get_type() not in [
+        hfst.ImplementationType.SFST_TYPE,
+        hfst.ImplementationType.FOMA_TYPE,
+    ]
+
     paths=None
     if nrandom != None:
         paths = tr.extract_paths(obey_flags=obeyflags, random=nrandom)

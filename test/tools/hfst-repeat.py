@@ -8,13 +8,10 @@ long_getopts=['from=', 'to=']
 options = hfst_commandline.hfst_getopt(short_getopts, long_getopts, 1)
 
 for opt in options[0]:
-    if opt[0] == '-f' or opt[0] == '--from':
+    if opt[0] in ['-f', '--from']:
         minimum = int(opt[1])
-    elif opt[0] == '-t' or opt[0] == '--to':
+    elif opt[0] in ['-t', '--to']:
         maximum = int(opt[1])
-    else:
-        pass
-
 istr = hfst_commandline.get_one_hfst_input_stream(options)[0]
 ostr = hfst.HfstOutputStream(type=istr.get_type())
 

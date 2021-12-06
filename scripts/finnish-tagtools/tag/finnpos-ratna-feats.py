@@ -51,23 +51,22 @@ def main(pname, iname, ifile, oname, ofile, olog, freq_words):
         sentence = []
 
         # Split file into sentences and check syntax.
-        for line in ifile:            
+        for line in ifile:    
             line = line.strip()
 
             if len(line) == 0:
                 break
 
-            else:
-                fields = line.split('\t')
+            fields = line.split('\t')
 
-                if len(fields) != 1 and len(fields) != 3 and len(fields) != 5:
-                    print(fields)
-                    olog.write(("Line %u in file %s: Incorrect field count %u. " +
-                                "Should be 1, 3 or 5." + linesep) 
-                               % 
-                               (i + 1, iname, len(fields)))
+            if len(fields) not in [1, 3, 5]:
+                print(fields)
+                olog.write(("Line %u in file %s: Incorrect field count %u. " +
+                            "Should be 1, 3 or 5." + linesep) 
+                           % 
+                           (i + 1, iname, len(fields)))
 
-                    return EXIT_FAIL
+                return EXIT_FAIL
 
             sentence.append(fields)
 
@@ -87,7 +86,7 @@ def main(pname, iname, ifile, oname, ofile, olog, freq_words):
             lemma = '_'
             label = '_'
             ann   = '_'
-            
+
             if len(line) == 1:
                 wf = line[0]
                 lemma, label, ann = '_', '_', '_'
@@ -97,20 +96,16 @@ def main(pname, iname, ifile, oname, ofile, olog, freq_words):
             else:
                 wf, feats, lemma, label, ann = line
 
-            features = []                
-
-            if feats != '_':
-                features = feats.split(' ')
-
-            if not ann in ['_', '']:
+            features = feats.split(' ') if feats != '_' else []
+            if ann not in ['_', '']:
                 lemma_list = ann
                 if ' ' in ann:
                     lemma_list = ann[:ann.find(' ')]
-                
+
                 label_feats = [ "FEAT:" + label for label in 
                                 map(lambda x: x[0], eval(lemma_list)) ]
 
-                if len(label_feats) != 0:
+                if label_feats:
                     features += label_feats
                 else:
                     features.append("NO_LABELS")
@@ -121,29 +116,29 @@ def main(pname, iname, ifile, oname, ofile, olog, freq_words):
             features.append('WORD_LEN='   + str(len(wf)))
             features.append('NWORD='  + get_wf(i + 1, sentence))
             features.append('NNWORD=' + get_wf(i + 2, sentence))
-            
+
             features.append('PWORDPAIR='  + get_wf(i - 1, sentence) + "_" + wf)
             features.append('NWORDPAIR='  + wf + "_" + get_wf(i + 1, sentence))
-            
+
             features.append("LC_WORD=" + wf.lower())
-            
-            if not wf in freq_words:
+
+            if wf not in freq_words:
                 features += get_suffixes(wf)
                 features += get_prefixes(wf)
-            
+
                 features.append(has_uc(wf))
                 features.append(has_digit(wf))
                 features.append(has_dash(wf))
-            
+
             feat_str = " ".join(filter(None, features))
-        
-        
+
+
             ofile.write(("%s\t%s\t%s\t%s\t%s" + linesep) 
                         % 
                         (wf, feat_str, lemma, label, ann))
-        
+
         ofile.write(linesep)
-        
+
         # Ensure that the line is written immediately so that features
         # get passed to finnpos-label in real time when labeling text
         # from a stream.

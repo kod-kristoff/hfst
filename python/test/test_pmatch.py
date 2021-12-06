@@ -24,7 +24,7 @@ for type in [hfst.ImplementationType.SFST_TYPE, hfst.ImplementationType.TROPICAL
         defs = hfst.compile_pmatch_expression(data)
         cont = hfst.PmatchContainer(defs)
         assert cont.match("Je marche seul dans l'avenue des Ternes.") == "Je marche seul dans l'<FrenchStreetName>avenue des Ternes</FrenchStreetName>."
-        
+
         # (3) try to compile a nonexistent file
         nonexistent_file = 'foofoofoofoofoofoofoofoofoofoofoofoo'
         assert not os.path.isfile(nonexistent_file)
@@ -72,7 +72,7 @@ for type in [hfst.ImplementationType.SFST_TYPE, hfst.ImplementationType.TROPICAL
             assert tokenization.rstrip() == "Tässä\non\nsanoja\n!"
 
             # stress test (tested also with 100 000)
-            for i in range(10000):
+            for _ in range(10000):
                 tokenization = cont.tokenize("Tässä on sanoja!")
             assert tokenization == ["Tässä", "on", "sanoja", "!"]
 
@@ -80,10 +80,3 @@ for type in [hfst.ImplementationType.SFST_TYPE, hfst.ImplementationType.TROPICAL
         # skip these tests, it seems that PmatchCompiler should be reseted after
         # compilation that fails...
         continue
-        for expr in ["foobarbaz; ????", "", "efine CapWord UppercaseAlpha Alpha* :"]:
-            print(expr)
-            try:
-                defs = hfst.compile_pmatch_expression(expr)
-                assert False
-            except hfst.exceptions.HfstException as e:
-                pass

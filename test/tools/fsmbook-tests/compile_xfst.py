@@ -10,7 +10,7 @@ if (sys.argv[1] == 'sfst'):
         hfst.set_default_fst_type(hfst.ImplementationType.SFST_TYPE)
     else:
         raise RuntimeError('Format sfst is not available.')
-elif (sys.argv[1] == 'openfst' or sys.argv[1] == "openfst-tropical"):
+elif sys.argv[1] in ['openfst', "openfst-tropical"]:
     if (hfst.HfstTransducer.is_implementation_type_available(hfst.ImplementationType.TROPICAL_OPENFST_TYPE)):
         hfst.set_default_fst_type(hfst.ImplementationType.TROPICAL_OPENFST_TYPE)
     else:
@@ -22,6 +22,6 @@ elif (sys.argv[1] == 'foma'):
         raise RuntimeError('Format foma is not available.')
 else:
     raise RuntimeError('Transducer format "' + sys.argv[1] + '" not recognized.')
-    
+
 if hfst.compile_xfst_file(sys.argv[2]) != 0 :
     raise RuntimeError('Compiling file "' + sys.argv[2] + '" failed.')

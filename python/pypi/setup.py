@@ -40,12 +40,11 @@ def readme():
 
 # If hfst-specific option is found in sys.argv, remove it and return True. Else, return False.
 def hfst_specific_option(option):
-    if option in argv:
-        index = argv.index(option)
-        argv.pop(index)
-        return True
-    else:
+    if option not in argv:
         return False
+    index = argv.index(option)
+    argv.pop(index)
+    return True
 
 
 # ----- C++ STANDARD  -----
@@ -83,7 +82,7 @@ swig_include_dir = "libhfst/src/"
 # Generate wrapper for C++
 ext_swig_opts = ["-c++", "-I" + swig_include_dir, "-Wall"]
 # for python3.3 and python3.4 on windows, add SDK include directory
-if platform == "win32" and version_info[0] == 3 and (version_info[1] == 3 or version_info[1] == 4):
+if platform == "win32" and version_info[0] == 3 and version_info[1] in [3, 4]:
     ext_swig_opts.extend(["-IC:\\Program Files (x86)\\Microsoft SDKs\\Windows\\v7.0A\\Include"])
 # By default, we have a pre-swig-generated wrapper
 ext_source = ["libhfst_wrap.cpp"]
@@ -96,14 +95,12 @@ if hfst_specific_option('--generate-wrapper'):
 # python bindings are run from has its own readline which will do.
 include_readline=False
 include_getline=False
-if platform == "linux" or platform == "linux2" or platform == "darwin":
+if platform in ["linux", "linux2", "darwin"]:
     include_readline=True
     include_getline=True
 if hfst_specific_option('--no-readline'):
     include_readline=False
-ext_extra_link_args = []
-if include_readline:
-    ext_extra_link_args = ['-lreadline']
+ext_extra_link_args = ['-lreadline'] if include_readline else []
 # Experimental...
 if platform == "darwin" and CPP_STD_11:
     ext_extra_link_args.extend(['-mmacosx-version-min=10.7'])
@@ -153,14 +150,14 @@ if (not CPP_STD_11):
     ext_define_macros.append(('USE_TR1_UNORDERED_MAP_AND_SET', None))
     # On windows, the header files are not located in directory tr1
     # although the namespace is std::tr1.
-    if not platform == "win32":
+    if platform != "win32":
         ext_define_macros.append(('INCLUDE_TR1_UNORDERED_MAP_AND_SET', None))
 
 
 # ----- COMPILATION OPTIONS -----
 
 ext_extra_compile_args = []
-if platform == "linux" or platform == "linux2" or platform == "darwin":
+if platform in ["linux", "linux2", "darwin"]:
     ext_extra_compile_args = ["-Wno-sign-compare", "-Wno-strict-prototypes"]
     # C++11 standard does not need to be specifically requested for msvc compilers.
     if CPP_STD_11:
@@ -178,16 +175,8 @@ if platform == "win32":
 # C++ source files have 'cpp' extension
 cpp = ".cpp"
 
-# on windows, openfst back-end is in directory 'openfstwin'
-openfstdir = "openfst"
-if platform == "win32":
-    openfstdir = "openfstwin"
-
-# foma source file extension (C++ by default)
-fe = cpp
-if not CPP_FOMA:
-    fe = ".c"
-
+openfstdir = "openfstwin" if platform == "win32" else "openfst"
+fe = ".c" if not CPP_FOMA else cpp
 # all c++ extension source files
 libhfst_source_files = ["libhfst/src/parsers/XfstCompiler" + cpp,
                         "libhfst/src/HfstApply" + cpp,
@@ -312,20 +301,18 @@ openfst_source_files =  [ "back-ends/" + openfstdir + "/src/lib/compat" + cpp,
                           "back-ends/" + openfstdir + "/src/lib/symbol-table-ops" + cpp,
                           "back-ends/" + openfstdir + "/src/lib/util" + cpp ]
 
-libhfst_source_files = libhfst_source_files + openfst_source_files
+libhfst_source_files += openfst_source_files
 
 if include_foma_backend:
-    libhfst_source_files = libhfst_source_files + foma_source_files
+    libhfst_source_files += foma_source_files
 
 ext_package_data = {}
-if (platform == "win32"):
-    if (version_info[0] == 2 and version_info[1] > 6):
+if (version_info[0] == 2 and version_info[1] > 6):
+    if (platform == "win32"):
         package_data = {'hfst': ['MSVCP90.DLL', 'MSVCR90.DLL']}
-    elif (version_info[0] == 3 and version_info[1] > 4):
+elif (version_info[0] == 3 and version_info[1] > 4):
+    if (platform == "win32"):
         package_data = {'hfst': ['MSVCP140.DLL', 'VCRUNTIME140.DLL']}
-    else:
-        pass
-
 # (Is this needed?)
 # foma_object_files = []
 # (compile foma backend separately)

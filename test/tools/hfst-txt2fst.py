@@ -12,9 +12,9 @@ long_getopts = ['format=','epsilon=','input=','output=','prolog']
 options = hfst_commandline.hfst_getopt(short_getopts, long_getopts, 1)
 
 for opt in options[0]:
-    if opt[0] == '-f' or opt[0] == '--format':
+    if opt[0] in ['-f', '--format']:
         impl = hfst_commandline.get_implementation_type(opt[1])
-    elif opt[0] == '-e' or opt[0] == '--epsilon':
+    elif opt[0] in ['-e', '--epsilon']:
         epsilonstr = opt[1]
     elif opt[0] == '--prolog':
         prolog = True

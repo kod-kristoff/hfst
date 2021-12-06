@@ -11,27 +11,21 @@ def get_proptags(label_lemma_pairs):
         for part in label.split("|"):
             if part.startswith("[PROP="):
                 proptags.add(part)
-    if len(proptags) != 0:
+    if proptags:
         return ''.join(sorted(proptags))
     return "_"
 
 def is_subset(tags1, tags2):
     parts1 = tags1.split("|")
     parts2 = tags2.split("|")
-    for part in parts1:
-        if part not in parts2:
-            return False
-    return True
+    return all(part in parts2 for part in parts1)
 
 def is_exact_match(tags1, tags2):
     parts1 = tags1.split("|")
     parts2 = tags2.split("|")
     if len(tags1) != len(tags2):
         return False
-    for part in parts1:
-        if part not in parts2:
-            return False
-    return True
+    return all(part in parts2 for part in parts1)
 
 if "ner" in argv:
     for_ner = True

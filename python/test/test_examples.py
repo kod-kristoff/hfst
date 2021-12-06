@@ -18,7 +18,7 @@ for type in types:
     if hfst.HfstTransducer.is_implementation_type_available(type):
 
         hfst.set_default_fst_type(type)
-        
+
         # StreamIsClosedException
         try:
             tr = hfst.regex('foo')
@@ -27,7 +27,7 @@ for type in types:
             outstr.write(tr)
         except hfst.exceptions.StreamIsClosedException:
             print("Could not write transducer: stream to file was closed.")
-            
+
         # TransducerIsCyclicException
         transducer = hfst.regex('[a:b]*')
         try:
@@ -38,11 +38,9 @@ for type in types:
             print("The transducer is cyclic and has an infinite number of paths. Some of them:")
             results = transducer.extract_paths(output='text', max_cycles=5)
             print(results)
-        
-        # NotTransducerStreamException
-        f = open('foofile', 'w')
-        f.write('This is an ordinary text file.\n')
-        f.close()
+
+        with open('foofile', 'w') as f:
+            f.write('This is an ordinary text file.\n')
         try:
             instr = hfst.HfstInputStream('foofile')
             tr = instr.read()
@@ -50,17 +48,14 @@ for type in types:
             instr.close()
         except hfst.exceptions.NotTransducerStreamException:
             print("Could not print transducer: the file does not contain binary transducers.")
-        
-        f = open('testfile1.att', 'w')
-        f.write('0 1 a b\n1 2 c\n2\n')
-        f.close()
-        f = open('testfile1.att', 'r')
-        try:
-            tr = hfst.read_att_transducer(f)
-        except hfst.exceptions.NotValidAttFormatException:
-            print('Could not read file: it is not in valid ATT format.')
-        f.close()
-        
+
+        with open('testfile1.att', 'w') as f:
+            f.write('0 1 a b\n1 2 c\n2\n')
+        with open('testfile1.att', 'r') as f:
+            try:
+                tr = hfst.read_att_transducer(f)
+            except hfst.exceptions.NotValidAttFormatException:
+                print('Could not read file: it is not in valid ATT format.')
         # StateIsNotFinalException
         tr = hfst.HfstBasicTransducer()
         tr.add_state(1)
@@ -75,7 +70,7 @@ for type in types:
         #    tr = hfst.regex('a -> b || c:c __ c:d')
         # except hfst.exceptions.ContextTransducersAreNotAutomataException:
         #    print("Context transducers must be automata.")
-        
+
         # TransducersAreNotAutomataException
         tr1 = hfst.regex('foo:bar')
         tr2 = hfst.regex('bar:baz')
@@ -83,7 +78,7 @@ for type in types:
             tr1.cross_product(tr2)
         except hfst.exceptions.TransducersAreNotAutomataException:
             print('Transducers must be automata in cross product.')
-        
+
         # StateIndexOutOfBoundsException
         tr = hfst.HfstBasicTransducer()
         tr.add_state(1)
@@ -91,7 +86,7 @@ for type in types:
             w = tr.get_final_weight(2)
         except hfst.exceptions.StateIndexOutOfBoundsException:
             print('State number 2 does not exist')
-        
+
         # TransducerTypeMismatchException:
         if hfst.ImplementationType.FOMA_TYPE in types:
             hfst.set_default_fst_type(hfst.ImplementationType.TROPICAL_OPENFST_TYPE)
@@ -128,7 +123,7 @@ for type in types:
         # A dictionary
         if not hfst.fst({'foo':'foo', 'bar':('foo',1.4), 'baz':(('foo',-1),'BAZ')}).compare(hfst.regex('{foo}|{bar}:{foo}::1.4|{baz}:{foo}::-1|{baz}:{BAZ}')):
             raise RuntimeError('')
-        
+
         # tokenized_fst
         tok = hfst.HfstTokenizer()
         tok.add_multichar_symbol('foo')
@@ -167,7 +162,7 @@ for type in types:
                 print(arc)
             if fsm.is_final_state(state):
                 print('%i %f' % (state, fsm.get_final_weight(state)) )
-        
+
         # HfstBasicTransducer.disjunct
         lexicon = hfst.HfstBasicTransducer()
         tok = hfst.HfstTokenizer()
@@ -177,7 +172,7 @@ for type in types:
         lexicon = hfst.HfstTransducer(lexicon)
         if not lexicon.compare(hfst.regex('{dog}::0.3|{cat}::0.5|{elephant}::1.6')):
             raise RuntimeError('')
-        
+
         # HfstBasicTransducer.transitions
         for state in fsm.states():
             for arc in fsm.transitions(state):
@@ -185,38 +180,38 @@ for type in types:
                 print(arc)
             if fsm.is_final_state(state):
                 print('%i %f' % (state, fsm.get_final_weight(state)) )
-        
+
         # HfstBasicTransducer.substitute and HfstTransducer.substitute
         HFST = hfst.regex('a:a')
         basic = hfst.HfstBasicTransducer(HFST)
         HFST.substitute('a', 'A', input=True, output=False)
         basic.substitute('a', 'A', input=True, output=False)
-        
+
         HFST = hfst.regex('a a:b b')
         basic = hfst.HfstBasicTransducer(HFST)
         HFST.substitute(('a','b'),('A','B'))
         basic.substitute(('a','b'),('A','B'))
-        
+
         HFST = hfst.regex('a a:b b')
         basic = hfst.HfstBasicTransducer(HFST)
         HFST.substitute(('a','b'), (('A','B'),('a','B'),('A','b')))
         basic.substitute(('a','b'), (('A','B'),('a','B'),('A','b')))
-        
+
         HFST = hfst.regex('a a:b b')
         basic = hfst.HfstBasicTransducer(HFST)
         HFST.substitute(('a','b'), hfst.regex('[a:b]+'))
         basic.substitute(('a','b'), hfst.HfstBasicTransducer(hfst.regex('[a:b]+')))
-        
+
         HFST = hfst.regex('a b c d')
         basic = hfst.HfstBasicTransducer(HFST)
         HFST.substitute({'a':'A', 'b':'B', 'c':'C'})
         basic.substitute({'a':'A', 'b':'B', 'c':'C'})
-        
+
         HFST = hfst.regex('a a:b b b:c c c:d d')
         basic = hfst.HfstBasicTransducer(HFST)
         HFST.substitute( {('a','a'):('A','A'), ('b','b'):('B','B'), ('c','c'):('C','C')} )
         basic.substitute( {('a','a'):('A','A'), ('b','b'):('B','B'), ('c','c'):('C','C')} )
-        
+
         # HfstBasicTransducer.enumerate
         for state, arcs in enumerate(fsm):
             for arc in arcs:
@@ -224,7 +219,7 @@ for type in types:
                 print(arc)
             if fsm.is_final_state(state):
                 print('%i %f' % (state, fsm.get_final_weight(state)) )
-        
+
         # HfstTransducer
         # argument handling
         transducer1 = hfst.regex('foo:bar baz')
@@ -249,10 +244,9 @@ for type in types:
             except hfst.exceptions.TransducerTypeMismatchException:
                 print('Implementation types of transducers must be the same.')
 
-        # read_att from file
-        f = open('testfile2.att', 'w')
-        f.write(
-"""0 1 foo bar 0.3
+        with open('testfile2.att', 'w') as f:
+                    f.write(
+            """0 1 foo bar 0.3
 1 0.5
 --
 0 0.0
@@ -261,22 +255,18 @@ for type in types:
 0 0.0
 0 0 a <eps> 0.2
 """)
-        f.close()
-
         transducers = []
-        ifile = open('testfile2.att', 'r')
-        try:
-            while (True):
-                t = hfst.read_att_transducer(ifile, '<eps>')
-                transducers.append(t)
-                print("read one transducer")
-        except hfst.exceptions.NotValidAttFormatException:
-            print("Error reading transducer: not valid AT&T format.")
-        except hfst.exceptions.EndOfStreamException:
-            pass
-        ifile.close()
+        with open('testfile2.att', 'r') as ifile:
+            try:
+                while (True):
+                    t = hfst.read_att_transducer(ifile, '<eps>')
+                    transducers.append(t)
+                    print("read one transducer")
+            except hfst.exceptions.NotValidAttFormatException:
+                print("Error reading transducer: not valid AT&T format.")
+            except hfst.exceptions.EndOfStreamException:
+                pass
         print("Read %i transducers in total" % len(transducers))
-
 # read_att from string
 #att_str = """0 1 a b
 #1 2 c d
@@ -294,13 +284,11 @@ for type in types:
         tr4 = hfst.regex('[foo]')
         tr5 = hfst.empty_fst()
 
-        f = open('testfile3.att', 'w')
-        for tr in [tr1, tr2, tr3, tr4]:
-            tr.write_att(f)
-            f.write('--\n')
-        tr5.write_att(f)
-        f.close()
-
+        with open('testfile3.att', 'w') as f:
+            for tr in [tr1, tr2, tr3, tr4]:
+                tr.write_att(f)
+                f.write('--\n')
+            tr5.write_att(f)
         # extract_paths
         tr = hfst.regex('a:b+ (a:c+)')
         print(tr)
@@ -315,77 +303,60 @@ for type in types:
             ostr.write(hfst.regex(re))
             ostr.flush()
         ostr.close()
-        
+
         # HfstInputStream
         istr = hfst.HfstInputStream('testfile1.hfst')
         transducers = []
         while not (istr.is_eof()):
             transducers.append(istr.read())
         istr.close()
-        if not len(transducers) == len(res):
+        if len(transducers) != len(res):
             raise RuntimeError('')
-        i=0
-        for tr in transducers:
+        for i, tr in enumerate(transducers):
             if not tr.compare(hfst.regex(res[i])):
                 raise RuntimeError('')
-            i+=1
-
 # push_weights
-
 # QuickStart (1/3)
 
         tr1 = hfst.regex('foo:bar')
         tr2 = hfst.regex('bar:baz')
         tr1.compose(tr2)
         print(tr1)
-
 # QuickStart (2/3)
-
 # Create as HFST basic transducer [a:b] with transition weight 0.3 and final weight 0.5.
         t = hfst.HfstBasicTransducer()
         t.add_state(1)
         t.add_transition(0, 1, 'a', 'b', 0.3)
         t.set_final_weight(1, 0.5)
-
 # Convert to tropical OpenFst format (the default, if not set) and push weights toward final state.
         T = hfst.HfstTransducer(t)
         T.push_weights_to_end()
-
 # Convert back to HFST basic transducer.
         tc = hfst.HfstBasicTransducer(T)
         try:
         # Rounding might affect the precision.
-            if (0.79 < tc.get_final_weight(1)) and (tc.get_final_weight(1) < 0.81):
+            if tc.get_final_weight(1) > 0.79 and tc.get_final_weight(1) < 0.81:
                 print("TEST PASSED")
-            else:
-                if hfst.get_default_fst_type() == hfst.ImplementationType.TROPICAL_OPENFST_TYPE:
-                    raise RuntimeError('')
-                else:
-                    pass # ok to fail if weights are not in use
-        # If the state does not exist or is not final
+            elif hfst.get_default_fst_type() == hfst.ImplementationType.TROPICAL_OPENFST_TYPE:
+                raise RuntimeError('')
         except hfst.exceptions.HfstException:
             print("TEST FAILED: An exception thrown.")
             raise RuntimeError('')
-
 # QuickStart (3/3)
-
 # Create a simple lexicon transducer [[foo bar foo] | [foo bar baz]].
         tok = hfst.HfstTokenizer()
         tok.add_multichar_symbol('foo')
         tok.add_multichar_symbol('bar')
         tok.add_multichar_symbol('baz')
-        
+
         words = hfst.tokenized_fst(tok.tokenize('foobarfoo'))
         t = hfst.tokenized_fst(tok.tokenize('foobarbaz'))
         words.disjunct(t)
-
 # Create a rule transducer that optionally replaces 'bar' with 'baz' between 'foo' and 'foo'.
         rule = hfst.regex('bar (->) baz || foo _ foo')
-
 # Apply the rule transducer to the lexicon.
         words.compose(rule)
         words.minimize()
-
 # Extract all string pairs from the result and print them to standard output.
         results = 0
         try:

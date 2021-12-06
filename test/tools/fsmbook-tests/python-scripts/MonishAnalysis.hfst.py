@@ -4,7 +4,7 @@ comp = hfst.XreCompiler(hfst.get_default_fst_type())
 
 def regex(name, expression):
     tr = comp.compile(expression)
-    if name == None:
+    if name is None:
         return tr
     else:
         comp.define_transducer(name, tr)

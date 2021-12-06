@@ -12,13 +12,10 @@ options = hfst_commandline.hfst_getopt(shortopts, longopts, 1)
 for opt in options[0]:
 #    if opt[0] == '--Werror':
 #        treat_warnings_as_errors=True
-    if opt[0] == '-F' or opt[0] == '--withFlags':
+    if opt[0] in ['-F', '--withFlags']:
         WithFlags=True
-    elif opt[0] == '-f' or opt[0] == '--format':
+    elif opt[0] in ['-f', '--format']:
         output_format = hfst_commandline.get_implementation_type(opt[1])
-    else:
-        pass
-
 istr = hfst_commandline.get_one_input_text_stream(options)
 ostr = hfst_commandline.get_one_output_hfst_stream(options, output_format)
 istr[0].close()
