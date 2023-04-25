@@ -33,13 +33,12 @@ def hfst_getopt(short_getopts, long_getopts, free_params=0, errmsg='TODO'):
     options = getopt.gnu_getopt(argv[1:], short_getopts, long_getopts)
     for opt in options[0]:
         _check_option(opt[0], short_getopts, long_getopts, errmsg)
-    if len(options) == 2:
-        if len(options[1]) > free_params:
-            raise RuntimeError('too many free parameters given (' + str(len(options[1])) + '), maximum is ' + str(free_params))
+    if len(options) == 2 and len(options[1]) > free_params:
+        raise RuntimeError('too many free parameters given (' + str(len(options[1])) + '), maximum is ' + str(free_params))
     return options
 
 def _get_input_stream(filename, stream_type):
-    if stream_type != 'hfst' and stream_type != 'text':
+    if stream_type not in ['hfst', 'text']:
         raise RuntimeError('stream_type ' + stream_type + 'not recognized')
     if filename == '-':
         if stream_type == 'hfst':
@@ -55,7 +54,7 @@ def _get_input_stream(filename, stream_type):
         return None
     
 def _get_output_stream(filename, stream_type, impl=None):
-    if stream_type != 'hfst' and stream_type != 'text':
+    if stream_type not in ['hfst', 'text']:
         raise RuntimeError('stream_type ' + stream_type + 'not recognized')
     if filename == '-':
         if stream_type == 'hfst':
@@ -76,7 +75,7 @@ def _get_one_output_stream(options, stream_type, impl=None):
     name='TODO'
     # 1) given with -o or --output
     for opt in options[0]:
-        if opt[0] == '-o' or opt[0] == '--output':
+        if opt[0] in ['-o', '--output']:
             explicit_file = opt[1]
             stream = _get_output_stream(explicit_file, stream_type, impl)
             return (stream, name)
@@ -99,16 +98,14 @@ def _get_one_input_stream(options, stream_type):
     name='TODO'
     # 1) given with -i or --input (overrides free argument)
     for opt in options[0]:
-        if opt[0] == '-i' or opt[0] == '--input':
+        if opt[0] in ['-i', '--input']:
             explicit_file = opt[1]
             stream = _get_input_stream(explicit_file, stream_type)
             return (stream, name)
-    if len(options) == 2:
-        # 2) given as free argument
-        if len(options[1]) >= 1:
-            arg = options[1][0]
-            stream = _get_input_stream(arg, stream_type)
-            return (stream, name)
+    if len(options) == 2 and len(options[1]) >= 1:
+        arg = options[1][0]
+        stream = _get_input_stream(arg, stream_type)
+        return (stream, name)
     # 3) not given, defaults to standard input
     stream = _get_input_stream('-', stream_type)
     return (stream, name)
@@ -131,12 +128,10 @@ def get_two_hfst_input_streams(options):
     name1='TODO'
     name2='TODO'
     for opt in options[0]:
-        if opt[0] == '-1' or opt[0] == '--input1':
-            explicit_ifile1 = opt[1] 
-        elif opt[0] == '-2' or opt[0] == '--input2':
+        if opt[0] in ['-1', '--input1']:
+            explicit_ifile1 = opt[1]
+        elif opt[0] in ['-2', '--input2']:
             explicit_ifile2 = opt[1]
-        else:
-            pass
     # free arguments were given
     if len(options) == 2:
         # at least one
@@ -151,19 +146,18 @@ def get_two_hfst_input_streams(options):
     istr2 = _get_input_stream(explicit_ifile2, 'hfst')
     if istr1 != None and istr2 != None:
         pass
-    elif istr1 == None and istr2 != None:
-        if arg1 == None:
+    elif istr1 is None and istr2 != None:
+        if arg1 is None:
             arg1 = '-'
         istr1 = _get_input_stream(arg1, 'hfst')
-    elif istr1 != None and istr2 == None:
-        if arg1 == None:
+    elif istr1 != None:
+        if arg1 is None:
             arg1 = '-'
         istr2 = _get_input_stream(arg1, 'hfst')
+    elif arg2 is None:
+        istr1 = _get_input_stream('-', 'hfst')
+        istr2 = _get_input_stream(arg1, 'hfst')
     else:
-        if arg2 == None:
-            istr1 = _get_input_stream('-', 'hfst')
-            istr2 = _get_input_stream(arg1, 'hfst')
-        else:
-            istr1 = _get_input_stream(arg1, 'hfst')
-            istr2 = _get_input_stream(arg2, 'hfst')
+        istr1 = _get_input_stream(arg1, 'hfst')
+        istr2 = _get_input_stream(arg2, 'hfst')
     return ((istr1, name1), (istr2, name2))

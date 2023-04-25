@@ -7,14 +7,11 @@ shortopts = 'l'
 longopts = ['list-formats', 'test-format=']
 options = hfst_commandline.hfst_getopt(shortopts, longopts, 1)
 for opt in options[0]:
-    if opt[0] == '-l' or opt[0] == '--list-formats':
+    if opt[0] in ['-l', '--list-formats']:
         list_formats=True
     elif opt[0] == '--test-format':
         test_format = opt[1]
-    else:
-        pass
-
-if (not list_formats) and test_format == None and len(options[1]) == 0:
+if not list_formats and test_format is None and len(options[1]) == 0:
     raise RuntimeError('error: hfst-format.py: input file, option --list-formats or option --test-format FMT must be given')
 
 aval = hfst.HfstTransducer.is_implementation_type_available
@@ -42,12 +39,12 @@ if test_format != None:
             exit(0)
         else:
             exit(1)
-    elif test_format == 'openfst-tropical' or test_format == 'openfst' or test_format == 'ofst' or test_format == 'ofst-tropical':
+    elif test_format in ['openfst-tropical', 'openfst', 'ofst', 'ofst-tropical']:
         if aval(hfst.ImplementationType.TROPICAL_OPENFST_TYPE):
             exit(0)
         else:
             exit(1)
-    elif test_format == 'openfst-log' or test_format == 'ofst-log':
+    elif test_format in ['openfst-log', 'ofst-log']:
         if aval(hfst.ImplementationType.LOG_OPENFST_TYPE):
             exit(0)
         else:
@@ -57,12 +54,17 @@ if test_format != None:
             exit(0)
         else:
             exit(1)
-    elif test_format == 'optimized-lookup-unweighted' or test_format == 'olu':
+    elif test_format in ['optimized-lookup-unweighted', 'olu']:
         if aval(hfst.ImplementationType.HFST_OL_TYPE):
             exit(0)
         else:
             exit(1)
-    elif test_format == 'optimized-lookup-weighted' or test_format == 'olw' or test_format == 'optimized-lookup' or test_format == 'ol':
+    elif test_format in [
+        'optimized-lookup-weighted',
+        'olw',
+        'optimized-lookup',
+        'ol',
+    ]:
         if aval(hfst.ImplementationType.HFST_OLW_TYPE):
             exit(0)
         else:

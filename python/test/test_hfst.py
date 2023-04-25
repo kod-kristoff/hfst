@@ -322,7 +322,7 @@ for type in types:
         else:
             tokenized = tok.tokenize(pathin, pathout)
         if not hfst.tokenized_fst(tokenized, weight).compare(hfst.regex(exp)):
-            if pathout == None:
+            if pathout is None:
                 raise RuntimeError('test_tokenized failed with input: ' + pathin)
             else:
                 raise RuntimeError('test_tokenized failed with input: ' + pathin + ", " + pathout)
@@ -462,14 +462,10 @@ fsm.add_transition(0, tr)
 fsm.add_transition(0, 0, 'baz', 'baz')
 fsm.add_transition(0, 0, 'baz', 'BAZ', 0.1)
 
-f = open('foo_basic', 'w')
-fsm.write_att(f)
-f.close()
-
-f = open('foo_basic', 'r')
-fsm2 = hfst.HfstBasicTransducer(hfst.read_att_transducer(f, hfst.EPSILON))
-f.close()
-
+with open('foo_basic', 'w') as f:
+    fsm.write_att(f)
+with open('foo_basic', 'r') as f:
+    fsm2 = hfst.HfstBasicTransducer(hfst.read_att_transducer(f, hfst.EPSILON))
 # Modify weights of a basic transducer
 fsm = hfst.HfstBasicTransducer()
 fsm.add_state(0)
@@ -506,33 +502,27 @@ fsm.add_transition(0,1,'foo','BAR',2)
 fsm.add_transition(1,2,'baz','baz',0)
 fsm.set_final_weight(2,0.5)
 
-# Different ways to print the transducer
-f = open('foo', 'w')
-for state in fsm.states():
-    for arc in fsm.transitions(state):
-        print('%i ' % (state), end='', file=f)
-        print(arc, file=f)
-    if fsm.is_final_state(state):
-        print('%i %f' % (state, fsm.get_final_weight(state)), file=f )
+with open('foo', 'w') as f:
+    for state in fsm.states():
+        for arc in fsm.transitions(state):
+            print('%i ' % (state), end='', file=f)
+            print(arc, file=f)
+        if fsm.is_final_state(state):
+            print('%i %f' % (state, fsm.get_final_weight(state)), file=f )
 
-for state, arcs in enumerate(fsm):
-    for arc in arcs:
-        print('%i ' % (state), end='', file=f)
-        print(arc, file=f)
-    if fsm.is_final_state(state):
-        print('%i %f' % (state, fsm.get_final_weight(state)), file=f)
+    for state, arcs in enumerate(fsm):
+        for arc in arcs:
+            print('%i ' % (state), end='', file=f)
+            print(arc, file=f)
+        if fsm.is_final_state(state):
+            print('%i %f' % (state, fsm.get_final_weight(state)), file=f)
 
-index=0
-for state in fsm.states_and_transitions():
-    for transition in state:
-        print('%u\t%u\t%s\t%s\t%.2f' % (index, transition.get_target_state(), transition.get_input_symbol(), transition.get_output_symbol(), transition.get_weight()), file=f)
-    if fsm.is_final_state(index):
-        print('%s\t%.2f' % (index, fsm.get_final_weight(index)), file=f)
-    index = index + 1
-
-print(fsm, file=f)
-f.close()
-
+    for index, state in enumerate(fsm.states_and_transitions()):
+        for transition in state:
+            print('%u\t%u\t%s\t%s\t%.2f' % (index, transition.get_target_state(), transition.get_input_symbol(), transition.get_output_symbol(), transition.get_weight()), file=f)
+        if fsm.is_final_state(index):
+            print('%s\t%.2f' % (index, fsm.get_final_weight(index)), file=f)
+    print(fsm, file=f)
 tr = hfst.HfstBasicTransducer(hfst.regex('foo'))
 tr.substitute({'foo':'bar'})
 tr.substitute({('foo','foo'):('bar','bar')})
@@ -566,6 +556,6 @@ for state in fsm:
         arc.set_weight(arc.get_weight() - 0.5)
 
 tr = hfst.regex('[["<f>" "<o>" "<o>"]:["<b>" "<a>" "<r>"]|["<F>" "<O>" "<O>"]:["<B>" "<A>" "<R>"]]::-7.5')
-assert(not (tr == None))
+assert not tr is None
 TR = hfst.HfstTransducer(fsm)
 assert(TR.compare(tr))

@@ -136,13 +136,13 @@ for line in sys.stdin:
 
     word_form = split_line[0]
     tag       = split_line[1]
-    
+
     sequence.append(split_line)
 
     # Reverse the word form in order to construct the reversed
     # suffixes of the word.
     rev_word_form = tagger_aux.reverse(word_form)
-    
+
     # Increment counts of word form and tag occurrences for whole
     # words.
     word_form_and_tag_map[rev_word_form][tag] += 1.0
@@ -154,20 +154,20 @@ for line in sys.stdin:
     word_maximal_suffix_length = min(len(rev_word_form),MAX_SUFFIX_LENGTH)
 
     if not word_form.islower():
-        for i in range(0,word_maximal_suffix_length + 1):
+        for i in range(word_maximal_suffix_length + 1):
 
             suffix = rev_word_form[:i]
-            
+
             upper_suffix_and_tag_count_map[tag][suffix] += 1.0
             upper_suffix_count_map[suffix]              += 1.0
             upper_tag_count_map[tag]                    += 1.0
             number_of_upper_suffixes                    += 1.0
 
     else:
-        for i in range(0,word_maximal_suffix_length + 1):
+        for i in range(word_maximal_suffix_length + 1):
 
             suffix = rev_word_form[:i]
-            
+
             lower_suffix_and_tag_count_map[tag][suffix] += 1.0
             lower_suffix_count_map[suffix]              += 1.0
             lower_tag_count_map[tag]                    += 1.0
@@ -211,9 +211,10 @@ print("STOP P(LOWER_SUFFIX)")
 tagger_aux.verbose_print("P(LOWER_TAG)",verbose)
 print("START P(LOWER_TAG)")
 number_of_lower_tags = number_of_lower_suffixes
-tagger_aux.print_penalties(lower_tag_count_map,
-                           number_of_lower_suffixes,
-                           "<lower_tag>")
+tagger_aux.print_penalties(
+    lower_tag_count_map, number_of_lower_tags, "<lower_tag>"
+)
+
 print("STOP P(LOWER_TAG)")
 
 
@@ -239,9 +240,7 @@ print("STOP P(UPPER_SUFFIX)")
 tagger_aux.verbose_print("P(UPPER_TAG)",verbose)
 print("START P(UPPER_TAG)")
 number_of_tags = number_of_upper_suffixes
-tagger_aux.print_penalties(upper_tag_count_map,
-                           number_of_upper_suffixes,
-                           "<upper_tag>")
+tagger_aux.print_penalties(upper_tag_count_map, number_of_tags, "<upper_tag>")
 print("STOP P(UPPER_TAG)")
 
 ## CONSTRUCT TAG SEQUENCE TABLE.

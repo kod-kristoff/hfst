@@ -140,8 +140,8 @@ def start_xfst(**kwargs):
     expression=""
     while True:
         expression += input(comp.get_prompt()).rstrip().lstrip()
-        if len(expression) == 0:
-           continue
+        if expression == '':
+            continue
         if expression[-1] == '\\':
            expression = expression[:-2] + '\n'
            continue
@@ -149,27 +149,25 @@ def start_xfst(**kwargs):
         if idle:
             retval = libhfst.hfst_compile_xfst_to_string_one(comp, expression)
             stdout.write(libhfst.get_hfst_xfst_string_one())
+        elif expression in {"apply down", "apply up"} and rl_found:
+            rl_length_2 = readline.get_current_history_length()
+            while True:
+                try:
+                   line = input().rstrip().lstrip()
+                except EOFError:
+                   break
+                if expression == "apply down":
+                    comp.apply_down(line)
+                else:
+                    comp.apply_up(line)
+            for _ in range(readline.get_current_history_length() - rl_length_2):
+                readline.remove_history_item(rl_length_2)
+            retval = 0
+        elif expression in {"inspect", "inspect net"}:
+            print('inspect net not supported')
+            retval = 0
         else:
-            # interactive command
-            if (expression == "apply down" or expression == "apply up") and rl_found:
-               rl_length_2 = readline.get_current_history_length()
-               while True:
-                  try:
-                     line = input().rstrip().lstrip()
-                  except EOFError:
-                     break
-                  if expression == "apply down":
-                     comp.apply_down(line)
-                  elif expression == "apply up":
-                     comp.apply_up(line)
-               for foo in range(readline.get_current_history_length() - rl_length_2):
-                  readline.remove_history_item(rl_length_2)
-               retval = 0
-            elif expression == "inspect" or expression == "inspect net":
-               print('inspect net not supported')
-               retval = 0
-            else:
-               retval = comp.parse_line(expression + "\n")
+            retval = comp.parse_line(expression + "\n")
         if retval != 0:
            print("expression '%s' could not be parsed" % expression)
            if comp.get("quit-on-fail") == "ON":
@@ -179,8 +177,8 @@ def start_xfst(**kwargs):
         expression = ""
 
     if rl_found:
-      for foo in range(readline.get_current_history_length() - rl_length_1):
-         readline.remove_history_item(rl_length_1)
+        for _ in range(readline.get_current_history_length() - rl_length_1):
+            readline.remove_history_item(rl_length_1)
 
 from sys import stdout
 
@@ -322,25 +320,22 @@ def regex(re, **kwargs):
 
     comp = XreCompiler(type_)
     comp.setOutputToConsole(to_console)
-    if not defs == None:
+    if not defs is None:
         for k,v in defs.items():
             vtype = str(type(v))
             if "HfstTransducer" in vtype:
                 comp.define_transducer(k,v)
                 # print('defining transducer')
-            else:
-                pass
-
-    if err == None:
-       return libhfst.hfst_regex(comp, re, "")
+    if err is None:
+        return libhfst.hfst_regex(comp, re, "")
     elif err == sys.stdout:
        return libhfst.hfst_regex(comp, re, "cout")
     elif err == sys.stderr:
        return libhfst.hfst_regex(comp, re, "cerr")
     else:
-       retval = libhfst.hfst_regex(comp, re, "")
-       err.write(unicode(libhfst.get_hfst_regex_error_message(), 'utf-8'))
-       return retval
+        retval = libhfst.hfst_regex(comp, re, "")
+        err.write(unicode(libhfst.get_hfst_regex_error_message(), 'utf-8'))
+        return retval
 
 def _replace_symbols(symbol, epsilonstr=EPSILON):
     if symbol == epsilonstr:
@@ -380,11 +375,9 @@ def read_att_string(att):
     """
     Create a transducer as defined in AT&T format in *att*.
     """
-    linecount = 0
     fsm = HfstBasicTransducer()
     lines = att.split('\n')
-    for line in lines:
-        linecount = linecount + 1
+    for linecount, line in enumerate(lines, start=1):
         if not _parse_att_line(line, fsm):
            raise hfst.exceptions.NotValidAttFormatException(line, "", linecount)
     return HfstTransducer(fsm, get_default_fst_type())
@@ -400,7 +393,7 @@ def read_att_input():
         line = input().rstrip()
         if line == "":
            break
-        linecount = linecount + 1
+        linecount += 1
         if not _parse_att_line(line, fsm):
            raise hfst.exceptions.NotValidAttFormatException(line, "", linecount)
     return HfstTransducer(fsm, get_default_fst_type())
@@ -416,12 +409,11 @@ def read_att_transducer(f, epsilonstr=EPSILON, linecount=[0]):
     while True:
         line = f.readline()
         if line == "":
-           if linecount_ == 0:
-              raise hfst.exceptions.EndOfStreamException("","",0)
-           else:
-              linecount_ = linecount_ + 1
-              break
-        linecount_ = linecount_ + 1
+            if linecount_ == 0:
+                raise hfst.exceptions.EndOfStreamException("","",0)
+            linecount_ += 1
+            break
+        linecount_ += 1
         if line[0] == '-':
            break
         if not _parse_att_line(line, fsm, epsilonstr):
@@ -531,23 +523,19 @@ def read_prolog_transducer(f, linecount=[0]):
     fsm = HfstBasicTransducer()
 
     line = ""
-    while(True):
+    while True:
         line = f.readline()
-        linecount_ = linecount_ + 1
+        linecount_ += 1
         if line == "":
             raise hfst.exceptions.EndOfStreamException("","",linecount[0] + linecount_)
         line = line.rstrip()
-        if line == "":
-            pass # allow extra prolog separator(s)
-        if line[0] == '#':
-            pass # comment line
-        else:
+        if line[0] != '#':
             break
 
     if not libhfst.parse_prolog_network_line(line, fsm):
         raise hfst.exceptions.NotValidPrologFormatException(line,"",linecount[0] + linecount_)
 
-    while(True):
+    while True:
         line = f.readline()
         if (line == ""):
             retval = HfstTransducer(fsm, get_default_fst_type())
@@ -555,19 +543,24 @@ def read_prolog_transducer(f, linecount=[0]):
             linecount[0] = linecount[0] + linecount_
             return retval
         line = line.rstrip()
-        linecount_ = linecount_ + 1
+        linecount_ += 1
         if line == "":  # prolog separator
             retval = HfstTransducer(fsm, get_default_fst_type())
             retval.set_name(fsm.name)
             linecount[0] = linecount[0] + linecount_
             return retval
-        if libhfst.parse_prolog_arc_line(line, fsm):
-            pass
-        elif libhfst.parse_prolog_final_line(line, fsm):
-            pass
-        elif libhfst.parse_prolog_symbol_line(line, fsm):
-            pass
-        else:
+        if (
+            not libhfst.parse_prolog_arc_line(line, fsm)
+            and (
+                libhfst.parse_prolog_arc_line(line, fsm)
+                or not libhfst.parse_prolog_final_line(line, fsm)
+            )
+            and (
+                libhfst.parse_prolog_arc_line(line, fsm)
+                or libhfst.parse_prolog_final_line(line, fsm)
+                or not libhfst.parse_prolog_symbol_line(line, fsm)
+            )
+        ):
             raise hfst.exceptions.NotValidPrologFormatException(line,"",linecount[0] + linecount_)
 
 class PrologReader:
@@ -685,10 +678,8 @@ def compile_xfst_file(filename, **kwargs):
     -------
     On success 0, else an integer greater than 0.
     """
-    if int(version[0]) > 2:
-      pass
-    else:
-      raise RuntimeError('hfst.compile_xfst_file not supported for python version 2')
+    if int(version[0]) <= 2:
+        raise RuntimeError('hfst.compile_xfst_file not supported for python version 2')
     verbosity=0
     quit_on_fail='ON'
     type = get_default_fst_type()
@@ -719,9 +710,8 @@ def compile_xfst_file(filename, **kwargs):
     xfstcomp.set('quit-on-fail', quit_on_fail)
     if verbosity > 1:
       print('Opening xfst file %s...' % filename)
-    f = open(filename, 'r', encoding='utf-8')
-    data = f.read()
-    f.close()
+    with open(filename, 'r', encoding='utf-8') as f:
+        data = f.read()
     if verbosity > 1:
       print('File closed...')
 
@@ -731,26 +721,26 @@ def compile_xfst_file(filename, **kwargs):
 
     # check special case
     if isinstance(output, StringIO) and isinstance(error, StringIO) and output == error:
-       retval = libhfst.hfst_compile_xfst_to_string_one(xfstcomp, data)
-       output.write(unicode(libhfst.get_hfst_xfst_string_one(), 'utf-8'))
+        retval = libhfst.hfst_compile_xfst_to_string_one(xfstcomp, data)
+        output.write(unicode(libhfst.get_hfst_xfst_string_one(), 'utf-8'))
     else:
-       arg1 = ""
-       arg2 = ""
-       if output == None or output == sys.stdout:
-          arg1 = "cout"
-       if output == sys.stderr:
-          arg1 == "cerr"
-       if error == None or error == sys.stderr:
-          arg2 = "cerr"
-       if error == sys.stdout:
-          arg2 == "cout"
+        arg1 = ""
+        arg2 = ""
+        if output is None or output == sys.stdout:
+            arg1 = "cout"
+        if output == sys.stderr:
+           arg1 == "cerr"
+        if error is None or error == sys.stderr:
+            arg2 = "cerr"
+        if error == sys.stdout:
+           arg2 == "cout"
 
-       retval = libhfst.hfst_compile_xfst(xfstcomp, data, arg1, arg2)
+        retval = libhfst.hfst_compile_xfst(xfstcomp, data, arg1, arg2)
 
-       if isinstance(output, StringIO):
-          output.write(unicode(libhfst.get_hfst_xfst_string_one(), 'utf-8'))
-       if isinstance(error, StringIO):
-          error.write(unicode(libhfst.get_hfst_xfst_string_two(), 'utf-8'))
+        if isinstance(output, StringIO):
+           output.write(unicode(libhfst.get_hfst_xfst_string_one(), 'utf-8'))
+        if isinstance(error, StringIO):
+           error.write(unicode(libhfst.get_hfst_xfst_string_two(), 'utf-8'))
 
     if verbosity > 1:
       print('Parsed file with return value %i (0 indicating succesful parsing).' % retval)
@@ -831,8 +821,7 @@ def compile_pmatch_file(filename):
     with open(filename, 'r') as myfile:
       data=myfile.read()
       myfile.close()
-    defs = compile_pmatch_expression(data)
-    return defs
+    return compile_pmatch_expression(data)
 
 def compile_sfst_file(filename, **kwargs):
     """
@@ -871,15 +860,15 @@ def compile_sfst_file(filename, **kwargs):
 
     retval=None
     import sys
-    if output == None:
-       retval = libhfst.hfst_compile_sfst(filename, "", verbosity, to_console)
+    if output is None:
+        retval = libhfst.hfst_compile_sfst(filename, "", verbosity, to_console)
     elif output == sys.stdout:
        retval = libhfst.hfst_compile_sfst(filename, "cout", verbosity, to_console)
     elif output == sys.stderr:
        retval = libhfst.hfst_compile_sfst(filename, "cerr", verbosity, to_console)
     else:
-       retval = libhfst.hfst_compile_sfst(filename, "", verbosity, to_console)
-       output.write(unicode(libhfst.get_hfst_sfst_output(), 'utf-8'))
+        retval = libhfst.hfst_compile_sfst(filename, "", verbosity, to_console)
+        output.write(unicode(libhfst.get_hfst_sfst_output(), 'utf-8'))
 
     return retval
 
@@ -934,22 +923,25 @@ def compile_lexc_file(filename, **kwargs):
 
     retval=-1
     import sys
-    if output == None:
-       retval = libhfst.hfst_compile_lexc(lexccomp, filename, "")
+    if output is None:
+        retval = libhfst.hfst_compile_lexc(lexccomp, filename, "")
     elif output == sys.stdout:
        retval = libhfst.hfst_compile_lexc(lexccomp, filename, "cout")
     elif output == sys.stderr:
        retval = libhfst.hfst_compile_lexc(lexccomp, filename, "cerr")
     else:
-       retval = libhfst.hfst_compile_lexc(lexccomp, filename, "")
-       output.write(unicode(libhfst.get_hfst_lexc_output(), 'utf-8'))
+        retval = libhfst.hfst_compile_lexc(lexccomp, filename, "")
+        output.write(unicode(libhfst.get_hfst_lexc_output(), 'utf-8'))
 
     return retval
 
 def _is_weighted_word(arg):
-    if isinstance(arg, tuple) and len(arg) == 2 and isinstance(arg[0], str) and isinstance(arg[1], (int, float)):
-       return True
-    return False
+    return (
+        isinstance(arg, tuple)
+        and len(arg) == 2
+        and isinstance(arg[0], str)
+        and isinstance(arg[1], (int, float))
+    )
 
 def _check_word(arg):
     if len(arg) == 0:
@@ -985,31 +977,31 @@ def fsa(arg):
     deftok = HfstTokenizer()
     retval = HfstBasicTransducer()
     if isinstance(arg, str):
-       if len(arg) == 0:
-           retval.set_final_weight(0, 0) # epsilon transducer with zero weight
-       else:
-           retval.disjunct(deftok.tokenize(_check_word(arg)), 0)
+        if len(arg) == 0:
+            retval.set_final_weight(0, 0) # epsilon transducer with zero weight
+        else:
+            retval.disjunct(deftok.tokenize(_check_word(arg)), 0)
     elif _is_weighted_word(arg):
        if len(arg) == 0:
            retval.set_final_weight(0, arg[1]) # epsilon transducer with weight
        else:
            retval.disjunct(deftok.tokenize(_check_word(arg[0])), arg[1])
-    elif isinstance(arg, tuple) or isinstance(arg, list):
-       for word in arg:
-           if _is_weighted_word(word):
-              if len(word) == 0:
-                  retval.set_final_weight(0, word[1]) # epsilon transducer with weight
-              else:
-                  retval.disjunct(deftok.tokenize(_check_word(word[0])), word[1])
-           elif isinstance(word, str):
-              if len(word) == 0:
-                  retval.set_final_weight(0, 0) # epsilon transducer with zero weight
-              else:
-                  retval.disjunct(deftok.tokenize(_check_word(word)), 0)
-           else:
-              raise RuntimeError('Tuple/list element not a string or tuple of string and weight.')
+    elif isinstance(arg, (tuple, list)):
+        for word in arg:
+            if _is_weighted_word(word):
+               if len(word) == 0:
+                   retval.set_final_weight(0, word[1]) # epsilon transducer with weight
+               else:
+                   retval.disjunct(deftok.tokenize(_check_word(word[0])), word[1])
+            elif isinstance(word, str):
+               if len(word) == 0:
+                   retval.set_final_weight(0, 0) # epsilon transducer with zero weight
+               else:
+                   retval.disjunct(deftok.tokenize(_check_word(word)), 0)
+            else:
+               raise RuntimeError('Tuple/list element not a string or tuple of string and weight.')
     else:
-       raise RuntimeError('Not a string or tuple/list of strings.')
+        raise RuntimeError('Not a string or tuple/list of strings.')
     return HfstTransducer(retval, get_default_fst_type())
 
 def fst(arg):
@@ -1040,23 +1032,21 @@ def fst(arg):
       A dictionary mapping strings to any of the above cases:
         {'foo':'foo', 'bar':('foo',1.4), 'baz':(('foo',-1),'BAZ')}
     """
-    if isinstance(arg, dict):
-       retval = regex('[0-0]') # empty transducer
-       for input, output in arg.items():
-           if not isinstance(input, str):
-              raise RuntimeError('Key not a string.')
-           left = fsa(input)
-           right = 0
-           if isinstance(output, str):
-              right = fsa(output)
-           elif isinstance(output, list) or isinstance(output, tuple):
-              right = fsa(output)
-           else:
-              raise RuntimeError('Value not a string or tuple/list of strings.')
-           left.cross_product(right)
-           retval.disjunct(left)
-       return retval
-    return fsa(arg)
+    if not isinstance(arg, dict):
+        return fsa(arg)
+    retval = regex('[0-0]') # empty transducer
+    for input, output in arg.items():
+        if not isinstance(input, str):
+           raise RuntimeError('Key not a string.')
+        left = fsa(input)
+        right = 0
+        if isinstance(output, (str, list, tuple)):
+            right = fsa(output)
+        else:
+            raise RuntimeError('Value not a string or tuple/list of strings.')
+        left.cross_product(right)
+        retval.disjunct(left)
+    return retval
 
 def fst_to_fsa(fst, separator=''):
     """
@@ -1101,7 +1091,11 @@ def fst_to_fsa(fst, separator=''):
         for arc in arcs:
             input = arc.get_input_symbol()
             output = arc.get_output_symbol()
-            if (input == output) and ((input == hfst.EPSILON) or (input == hfst.UNKNOWN) or (input == hfst.IDENTITY)):
+            if input == output and input in [
+                hfst.EPSILON,
+                hfst.UNKNOWN,
+                hfst.IDENTITY,
+            ]:
                 continue
             symbol = input + separator + output
             arc.set_input_symbol(symbol)
@@ -1163,26 +1157,25 @@ def fsa_to_fst(fsa, separator=''):
             input = arc.get_input_symbol()
             output = arc.get_output_symbol()
             symbols = []
-            if not (input == output):
+            if input != output:
                 raise RuntimeError('Transition input and output symbols differ.')
             if input == "":
                 raise RuntimeError('Transition symbol cannot be the empty string.')
             # separator given:
             if len(separator) > 0:
                 symbols = input.split(separator, 1)
-            # no separator given:
             else:
                 index = input.find('@')
-                if not index == 0:
+                if index != 0:
                     symbols.append(input[0])
-                    if not input[1] == '':
+                    if input[1] != '':
                         symbols.append(input[1:])
                 else:
                     index = input.find('@', 1)
                     if index == -1:
                         raise RuntimeError('Transition symbol cannot have only one "@" sign.')
-                    symbols.append(input[0:index+1])
-                    if not input[index+1] == '':
+                    symbols.append(input[:index+1])
+                    if input[index + 1] != '':
                         symbols.append(input[index+1:])
             arc.set_input_symbol(symbols[0])
             arc.set_output_symbol(symbols[-1])
@@ -1217,27 +1210,31 @@ def tokenized_fst(arg, weight=0):
     """
     retval = HfstBasicTransducer()
     state = 0
-    if isinstance(arg, list) or isinstance(arg, tuple):
-       for token in arg:
-           if isinstance(token, str):
-              new_state = retval.add_state()
-              retval.add_transition(state, new_state, token, token, 0)
-              state = new_state
-           elif isinstance(token, list) or isinstance(token, tuple):
-              if len(token) == 2:
-                 new_state = retval.add_state()
-                 retval.add_transition(state, new_state, token[0], token[1], 0)
-                 state = new_state
-              elif len(token) == 1:
-                 new_state = retval.add_state()
-                 retval.add_transition(state, new_state, token, token, 0)
-                 state = new_state
-              else:
-                 raise RuntimeError('Symbol or symbol pair must be given.')
-       retval.set_final_weight(state, weight)
-       return HfstTransducer(retval, get_default_fst_type())
+    if isinstance(arg, (list, tuple)):
+        for token in arg:
+            if (
+                not isinstance(token, str)
+                and isinstance(token, (list, tuple))
+                and len(token) == 2
+            ):
+                new_state = retval.add_state()
+                retval.add_transition(state, new_state, token[0], token[1], 0)
+                state = new_state
+            elif (
+                not isinstance(token, str)
+                and isinstance(token, (list, tuple))
+                and len(token) == 1
+                or isinstance(token, str)
+            ):
+                new_state = retval.add_state()
+                retval.add_transition(state, new_state, token, token, 0)
+                state = new_state
+            elif isinstance(token, (list, tuple)):
+                raise RuntimeError('Symbol or symbol pair must be given.')
+        retval.set_final_weight(state, weight)
+        return HfstTransducer(retval, get_default_fst_type())
     else:
-       raise RuntimeError('Argument must be a list or a tuple')
+        raise RuntimeError('Argument must be a list or a tuple')
 
 def empty_fst():
     """
@@ -1286,10 +1283,10 @@ def intersect(transducers):
     """
     retval = None
     for tr in transducers:
-      if retval == None:
-        retval = HfstTransducer(tr)
-      else:
-        retval.intersect(tr)
+        if retval is None:
+            retval = HfstTransducer(tr)
+        else:
+            retval.intersect(tr)
     retval.minimize()
     return retval
 
@@ -1299,7 +1296,7 @@ def compose(transducers):
     """
     retval = None
     for tr in transducers:
-        if retval == None:
+        if retval is None:
             retval = HfstTransducer(tr)
         else:
             retval.compose(tr)
@@ -1312,7 +1309,7 @@ def cross_product(transducers):
     """
     retval = None
     for tr in transducers:
-        if retval == None:
+        if retval is None:
             retval = HfstTransducer(tr)
         else:
             retval.cross_product(tr)

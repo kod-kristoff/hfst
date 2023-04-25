@@ -1,13 +1,9 @@
 import hfst
 import hfst_commandline
-harmonize=True
-
 options = hfst_commandline.hfst_getopt('H1:2:',['--do-not-harmonize'],2)
-for opt in options[0]:
-    if opt[0] == '-H' or opt[0] == '--do-not-harmonize':
-        harmonize=False
-    else:
-        pass # raise RuntimeError('Usage: hfst-compose.py INFILE1 INFILE2')
+harmonize = all(
+    opt[0] not in ['-H', '--do-not-harmonize'] for opt in options[0]
+)
 
 istreams = hfst_commandline.get_two_hfst_input_streams(options)
 istr1 = istreams[0][0]

@@ -19,7 +19,7 @@ diritems = \
 dirhfst = dir(hfst)
 
 for item in diritems:
-    if not item in dirhfst:
+    if item not in dirhfst:
         print('error: dir(hfst) does not contain', item)
         assert(False)
 

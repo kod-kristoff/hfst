@@ -43,8 +43,7 @@ class SequenceSimplifier:
     def __init__(self,pattern):
 
         for line in pattern:
-            if len(line) != 2 or (not line[0] in [0,1]) or \
-                    (not line[1] in [0,1]):
+            if len(line) != 2 or line[0] not in [0, 1] or line[1] not in [0, 1]:
                 raise InvalidPattern()
 
         self.pattern = pattern
@@ -81,21 +80,14 @@ class Pattern:
 # Read statistics patterns from file config_file_name.
 def read_config_file(config_file_name):
     config_file = open(config_file_name)
-    
+
     config_data = config_file.read().split("\n")
 
-    patterns = []
-
-    for line in config_data:
-        if line == "":
-            continue
-        patterns.append(parse_config_line(line))
-
-    return patterns
+    return [parse_config_line(line) for line in config_data if line != ""]
 
 def parse_config_pattern(pattern_str):
     
-    if re.match(valid_pattern_str,pattern_str) == None:
+    if re.match(valid_pattern_str, pattern_str) is None:
         raise InvalidConfigLine()
 
     field_strings = pattern_str.split(" ")

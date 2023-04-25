@@ -13,15 +13,12 @@ options = hfst_commandline.hfst_getopt(short_getopts, long_getopts, 2, errmsg)
 
 #for arg in argv[1:]:
 for opt in options[0]:
-    if opt[0] == '-s' or opt[0] == '--silent' or opt[0] == '-q' or opt[0] == '--quiet':
+    if opt[0] in ['-s', '--silent', '-q', '--quiet']:
         silent = True
-    elif opt[0] == '-H' or opt[0] == '--do-not-harmonize':
+    elif opt[0] in ['-H', '--do-not-harmonize']:
         harmonize = False
-    elif opt[0] == '-e' or opt[0] == '--eliminate-flags':
+    elif opt[0] in ['-e', '--eliminate-flags']:
         eliminate_flags=True
-    else:
-        pass # unknown options were already checked in hfst_getopt
-
 streams = hfst_commandline.get_two_hfst_input_streams(options)
 istr1 = streams[0][0]
 istr1_name = streams[0][1]

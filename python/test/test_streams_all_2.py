@@ -25,15 +25,12 @@ istr = hfst.HfstInputStream()
 transducers = istr.read_all()
 istr.close()
 
-if not len(transducers) == 3:
+if len(transducers) != 3:
     raise RuntimeError('Wrong number of transducers read.')
 
-i = 0
-for re in ['föö:bär','0','0-0']:
+for i, re in enumerate(['föö:bär','0','0-0']):
     if not transducers[i].compare(hfst.regex(re)):
         raise RuntimeError('Transducers are not equivalent.')
-    i += 1
-
 if len(transducers) > 0:
     f = sys.stdout
     i=0

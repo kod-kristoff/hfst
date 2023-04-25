@@ -7,7 +7,7 @@ long_getopts=['format=',]
 impl = hfst.ImplementationType.TROPICAL_OPENFST_TYPE
 options = hfst_commandline.hfst_getopt(short_getopts, long_getopts)
 for opt in options[0]:
-    if opt[0] == '-f' or opt[0] == '--format':
+    if opt[0] in ['-f', '--format']:
         impl = hfst_commandline.get_implementation_type(opt[1])
 
 hfst.set_default_fst_type(impl)

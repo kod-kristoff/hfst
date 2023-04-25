@@ -6,13 +6,12 @@ verbose_regex=False
 
 def regex(name, expression):
     tr = comp.compile(expression)
-    if name == None:
+    if name is None:
         return tr
-    else:
-        comp.define_transducer(name, tr)
-        if verbose_regex:
-            print("defined transducer '" + expression + "':")
-            print(tr)
+    comp.define_transducer(name, tr)
+    if verbose_regex:
+        print("defined transducer '" + expression + "':")
+        print(tr)
 
 # Numbers from one to nine.
 regex('OneToNine', '[1|2|3|4|5|6|7|8|9]')
